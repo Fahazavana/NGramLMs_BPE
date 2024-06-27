@@ -38,3 +38,22 @@ class Tokenizer:
         for order in range(1, orders+1):
             ngrams[order] = self.__build_ngram(tokens, order)
         return ngrams
+
+class SentenceTokenizer:
+    def __init__(self, text):
+        self.text = self.__tokenize(text)
+    
+    def __tokenize(self, text):
+        seq = ['<s>']
+        seq.extend(text.strip())
+        return seq + ['</s>']
+    
+    def get_ngram(self, order):
+        n = len(self.text)
+        ngram = []
+        for i in range(n):
+            _tmp = tuple(self.text[i*order:(i+1)*order])
+            if _tmp == ():
+                return ngram
+            ngram.append(_tmp)
+        return ngram

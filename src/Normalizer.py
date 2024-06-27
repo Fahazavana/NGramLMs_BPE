@@ -32,7 +32,7 @@ def paragraph_normalizer(text: str) -> str:
             text = text.replace(acr_and_abv, " ".join(acr_and_abv))
 
     # Split text into sentences
-    text = re.sub(r"([.!?])(\s[A-Z])\1", "\n", text)
+    text = re.sub(r"([.!?]\s)(?=[A-Z])", "\n", text)
 
     # Replace digits with '0'
     text = re.sub(r"\d", "0", text)
