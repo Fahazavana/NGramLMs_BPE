@@ -1,6 +1,6 @@
 import re
-import unicodedata
 import string
+import unicodedata
 
 
 def paragraph_normalizer(text: str) -> str:
@@ -40,12 +40,23 @@ def paragraph_normalizer(text: str) -> str:
     # Replace digits with '0'
     text = re.sub(r"\d", "0", text)
 
-    # Replace non-alphanumeric characters (except spaces and newlines) with a single space
-    text = re.sub(r"[^\w\s\n]", " ", text)
+    # Replace non-alphanumeric characters (except spaces and newlines) with 3 space
+    text = re.sub(r"[^\w\s\n]", "   ", text)
+    text = re.sub(r"\s{2,}", " ", text)
+    text = re.sub(r"_", " ", text)
 
     # Convert all text to lowercase
     text = text.lower()
 
     return text
 
-def normalize_file(file_name:)
+
+def normalize_file(in_file: str, out_file: str):
+    try:
+        with open(in_file, 'r') as file:
+            normalized_file = open(out_file, 'w+')
+            for line in file:
+                normalized_file.write(paragraph_normalizer(line))
+            print("Document Normalized Successfully!")
+    except FileNotFoundError:
+        print(f"File not found at {in_file}")
