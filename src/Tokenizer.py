@@ -17,19 +17,24 @@ class Tokenizer:
         try:
             with open(self.file_name) as file:
                 for line in file:
-                    yield from ['<s>', ' ']
-                    yield from line.strip()  # remove new line and change it into a ending maker
-                    yield from ['</s>', '\n']
+                    yield from ['<s>']
+                    yield from line.strip() 
+                    yield from ['</s>']
 
         except FileNotFoundError:
             print(f"File not found at {self.file_name}")
 
-    def build_ngram(self, order):
+    def __build_ngram(self, tokens, order):
         ngrams = set()
-        tokens = list(self)
-        print(tokens)
         L = len(tokens) - order
         for i in range(L):
-            current = "".join(tokens[i * order:(i + 1) * order])
-            ngrams = ngrams.union(current)
+            current = tuple(tokens[i * order:(i + 1) * order])
+            ngrams = ngrams.union({current})
+        return ngrams
+
+    def build_ngram(self, orders):
+        ngrams = {}
+        tokens = list(self.__iter__())
+        for order in range(1, orders+1):
+            ngrams[order] = self.__build_ngram(tokens, order)
         return ngrams

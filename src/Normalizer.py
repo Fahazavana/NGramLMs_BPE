@@ -20,22 +20,19 @@ def paragraph_normalizer(text: str) -> str:
     Returns:
         str: The normalized text.
     """
-    # Remove leading/trailing whitespace
-    text = text.strip()
-
     # Normalize diacritics to simple characters
     text = unicodedata.normalize('NFKD', text).encode(
         'ascii', 'ignore').decode('ascii')
 
     # Expand abbreviations and acronyms
     acrs_and_abvs = re.findall(
-        r"\b([A-Z]{2,}|[A-Z]+[0-9]+|[A-Z]+[a-z]+[A-Z])", text)
+        r"\b([A-Z]{2,}|[A-Z]+[0-9]+|[A-Z]+[a-z]+[A-Z]|[a-z]+[0-9]+)", text)
     for acr_and_abv in acrs_and_abvs:
         if any(char in string.punctuation for char in acr_and_abv) and len(acr_and_abv) > 1:
             text = text.replace(acr_and_abv, " ".join(acr_and_abv))
 
     # Split text into sentences
-    text = re.sub(r"([.!?])\s*", r"\1\n", text)
+    text = re.sub(r"([.!?])(\s[A-Z])\1", "\n", text)
 
     # Replace digits with '0'
     text = re.sub(r"\d", "0", text)

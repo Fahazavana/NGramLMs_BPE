@@ -1,10 +1,15 @@
+from .utils import sort_dict
+
 class LIdentify:
+    """
+        Language Identifiers
+    """
     def __init__(self, args):
         self.models = [*args]
 
     def scoring(self, unknown, order=3):
         score = {model.name: 0 for model in self.models}
-        for gram in unknown.keys():
+        for gram in unknown:
             for model in self.models:
                 score[model.name] += model.ngrams[order].get(gram, 0)
-        return score
+        return sort_dict(score)
