@@ -52,21 +52,48 @@ class NGModel:
 			sums[order] = sum(_tmp.values())
 		return counters, sums
 	
-	def ngram_prob(self, seq, order, k):
+	# def ngram_prob(self, seq, order, k):
+	# 	"""
+	# 		Compute p(w_t|w_{t-order+1:t})
+	# 	"""
+	# 	if len(seq)==1:
+	# 		pwt = self.ngram_counter[1].get(seq, 0) + k 
+	# 		p = self.ngram_sum[1] + k*self.type_size
+	# 		return pwt/p
+		
+	# 	elif 1<len(seq)<order:
+	# 		order = len(seq)
+	# 	wt_1 = seq[:order-1]
+	# 	joint = (self.ngram_counter[order].get(seq, 0) + k)
+	# 	pwt_1 = (self.ngram_counter[order-1].get(wt_1, 0)+k*self.type_size)
+	# 	return joint/pwt_1
+	def ngram_prob(self, seq, order,  lambdas, type='default',):
 		"""
 			Compute p(w_t|w_{t-order+1:t})
 		"""
-		if len(seq)==1:
-			pwt = self.ngram_counter[1].get(seq, 0) + k 
-			p = self.ngram_sum[1] + k*self.type_size
-			return pwt/p
-		
-		elif 1<len(seq)<order:
-			order = len(seq)
-		wt_1 = seq[:order-1]
-		joint = (self.ngram_counter[order].get(seq, 0) + k)
-		pwt_1 = (self.ngram_counter[order-1].get(wt_1, 0)+k*self.type_size)
-		return joint/pwt_1
+		if type=="default":
+			if len(seq)!= order:
+				return 1e-8
+
+			wt_1 = seq[:order-1]
+			joint = (self.ngram_counter[order].get(seq, 0))
+			pwt_1 = (self.ngram_counter[order-1].get(wt_1, 0))
+			if joint ==0 or pwt_1 ==0:
+				return 1e-8
+			return joint/pwt_1
+
+		elif type == "interpolate":
+			if sum(lambdas) != 1:
+				raise ValueError("lambdas must sum to 1")
+
+			log_prob = 0
+			for i in range(1, order + 1):
+				joint = np.array([self.ngram_counter[i].get(seq[:i], 0)])
+				log_prob += lambdas[i - 1] * order_log_prob
+			return log_prob
+
+		elif type == "backoff":
+			pass
 	
 
 	def sent_logprob(self, sentence, order, k=1e-8):
@@ -76,12 +103,29 @@ class NGModel:
 			nbr+=1
 		return logprob, nbr
 
-		
 
+	def interpolate(self, sentence, order, lambdas):
+		"""
+			Compute the interpolated probability of a sentence 
+			using n-gram probabilities from different orders.
+		"""
+		if sum(lambdas) != 1:
+			raise ValueError("lambdas must sum to 1")
 
-	def generate(self, start, max_len=100, k=0):
-		text = '<s>'+start
-		context = ["<s>", start]
+		log_prob = 0
+		for i in range(1, order + 1):
+			order_log_prob, _ = self.sent_logprob(sentence, i, k=1e-8)
+			log_prob += lambdas[i - 1] * order_log_prob
+		return log_prob
+
+	def interpolate_bo(self, sentence, order):
+		pass	
+
+	def generate(self, start, max_len=100, k=1e-8):
+		text = '<s> '+ start
+		context = ['<s>']
+		context.extend(start)
+		context = context[-self.orders:]
 		for _ in range(max_len):
 			probs = self.__get_next_probs(context, k)
 			next_word = self.__sample_word(probs)

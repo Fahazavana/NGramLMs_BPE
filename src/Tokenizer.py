@@ -17,7 +17,7 @@ class Tokenizer:
         try:
             with open(self.file_name) as file:
                 for line in file:
-                    yield from ['<s>']
+                    yield from ['<s>', ' ']
                     yield from line.strip() 
                     yield from ['</s>']
 
@@ -44,7 +44,7 @@ class SentenceTokenizer:
         self.text = self.__tokenize(text)
     
     def __tokenize(self, text):
-        seq = ['<s>']
+        seq = ['<s>', ' ']
         seq.extend(text.strip())
         return seq + ['</s>']
     
