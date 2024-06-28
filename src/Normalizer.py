@@ -37,8 +37,8 @@ def paragraph_normalizer(text: str) -> str:
     # Replace digits with '0'
     text = re.sub(r"\d", "0", text)
 
-    # Replace non-alphanumeric characters (except spaces and newlines) with 3 space
-    text = re.sub(r"[^\w\s\n]", "   ", text)
+    # Replace non-alphanumeric characters (except spaces and newlines) with a single space
+    text = re.sub(r"[^\w\s\n]", " ", text)
     text = re.sub(r"\s{2,}", " ", text)
     text = re.sub(r"_", " ", text)
 
@@ -49,11 +49,26 @@ def paragraph_normalizer(text: str) -> str:
 
 
 def normalize_file(in_file: str, out_file: str):
+    """
+    Normalize the contents of a file and write the results to another file.
+
+    Args:
+        in_file (str): Path to the input file.
+        out_file (str): Path to the output file.
+    """
     try:
         with open(in_file, 'r') as file:
-            normalized_file = open(out_file, 'w+')
-            for line in file:
-                normalized_file.write(paragraph_normalizer(line))
+            with open(out_file, 'w') as normalized_file:
+                for line in file:
+                    normalized_file.write(
+                        paragraph_normalizer(line.strip()) + '\n')
             print("Document Normalized Successfully!")
     except FileNotFoundError:
         print(f"File not found at {in_file}")
+
+
+# Example usage
+if __name__ == "__main__":
+    input_file = "input.txt"
+    output_file = "output.txt"
+    normalize_file(input_file, output_file)
