@@ -79,51 +79,27 @@ class NGModel:
 		
 
 
-
-
-	# def generate(self, start, max_len=100, smoothing=0):
-	# 	text = '<s>'+start
-	# 	tokens = ["<s>", start]
-	# 	for _ in range(max_len):
-	# 		tokens = tokens[-(self.orders -2):]
-	# 		probs = self.__get_next_probs(tokens, smoothing)
-	# 		next_word = self.__sample_word(probs)
-	# 		tokens.append(next_word)
-	# 		text += ''.join(next_word)
-	# 	return text
+	def generate(self, start, max_len=100, k=0):
+		text = '<s>'+start
+		context = ["<s>", start]
+		for _ in range(max_len):
+			probs = self.__get_next_probs(context, k)
+			next_word = self.__sample_word(probs)
+			context = context[1:] + [next_word]
+			text += ''.join(next_word)
+		return text
 	
-	# def __get_next_probs(self, tokens, smoothing):
-	# 	order = self.orders
-	# 	context= tuple(tokens[-(self.orders -2):])
-	# 	pcontext = self.log_joints[self.orders -1].get(context, 0) + smoothing * len(self.vocab) 
-	# 	probs = np.zeros((len(self.vocab),))
-		
-	# 	for i in range(len(self.vocab)):
-	# 		joint = tuple(tokens[-(self.orders -2):] + [self.vocab[i]])
-	# 		pjoint= self.log_joints[self.orders].get(joint, 0) + smoothing
-	# 		probs[i] = pjoint/pcontext
-	# 	# print(sum(probs))
-	# 	return probs
+	def __get_next_probs(self, context, k):
+		probs = np.zeros(self.type_size)
+		for i in range(len(self.type)):
+			seq= tuple( context + [self.type[i]])
+			probs[i] = self.ngram_prob(seq, self.orders, k)
+		return probs/sum(probs)
 
-	# def __sample_word(self, probs):
-	# 	idx = np.random.multinomial(1, probs).argmax() 
-	# 	return self.vocab[idx]
+	def __sample_word(self, probs):
+		idx = np.random.multinomial(1, probs).argmax() 
+		return self.type[idx]
 	
-	# def perplexity(self, text, order, smoothing=0):
-	# 	token = ['<s>']
-	# 	token.extend(text)
-	# 	token +=['</s>']
-	# 	N = len(token)
-	# 	P = 1
-	# 	norm = smoothing*len(self.vocab)
-	# 	for i in range(N-1):
-	# 		joint = token[i*(order):(i+1)*order]
-	# 		den = joint[:-1]
-	# 		p = (self.log_joints[order].get(tuple(joint), 0) + smoothing)
-	# 		p /= (self.log_joints[order -1].get(tuple(den), 0) + norm)
-	# 		P *=(1/p)
-	# 	return P**(1/N)
-		
 	def __repr__(self):
 		return self.name
 	
