@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import List, Tuple, Dict
 
 import numpy as np
 
@@ -11,12 +12,11 @@ class NGModel:
         self.orders = orders
         self.tokenizer = tokenizer
         self.counters = {}
-        self.vocab = set()
+        self.vocab = []
         self.vocab_size = 0
 
     def train(self, file_name):
         print(f"Training {self.name} model...", end=" ")
-        self.vocab = set()
         for order in range(1, self.orders + 1):
             _tmp = defaultdict(int)
             with open(file_name, "r") as corpus:
@@ -29,65 +29,96 @@ class NGModel:
         self.vocab_size = len(self.vocab)
         print("DONE!")
 
-    def Prob(self, seq, alpha=1):
+    def rawcount(self, seq):
         order = len(seq)
         if order > self.orders:
             raise RuntimeError("len(seq) must be less or equal to order")
+        if order < 1:
+            raise RuntimeError("len(seq) must be greater than 1")
 
+        num = self.counters[order].get(seq, 0)
         if order == 1:
-            count = self.counters[order].get(seq, 0)
-            total_count = sum(self.counters[order].values())
-            prob = (count + alpha) / (total_count + alpha * self.vocab_size)
+            den = sum(self.counters[order].values())
         else:
-            # For higher-order n-grams
-            count = self.counters[order].get(seq, 0)
-            prefix = seq[:-1]
-            prefix_count = self.counters[order - 1].get(prefix, 0)
-            prob = (count + alpha) / (prefix_count + alpha * self.vocab_size)
+            den = self.counters[order - 1].get(seq[:-1], 0)
+        return num, den
+
+    def prob(self, seq, alpha: int = 1):
+        """
+            Compute the probability of a N-gram using:
+            - alpha = 0: Unsmoothed
+            - alpha = 1: Laplace
+            - 1<alpha <0: add-alpha
+        """
+        num, den = self.rawcount(seq)
+        prob = (num + alpha) / (den + alpha * self.vocab_size)
         return prob
 
-    def LogProb(self, sentence, alpha=1):
-        logprob = 0
+    def probInt(self, seq: Tuple[str], alphas: List):
+        """
+            Compute the probability of an n_gram
+            usign interpolation
+        """
+        prob = 0
+        for i in range(self.orders):
+            ngram = seq[-self.orders + i:]
+            num, den = self.rawcount(ngram)
+            if num != 0:
+                prob += alphas[i] * (num / den)
+        return prob
+
+    def logProbInt(self, sentence: str, alphas: List[float]):
+        """
+            Compute the log probability of an input sentence
+            using interpolation.
+        """
+        logprob, prob = 0, 0
         for ngram in self.tokenizer.charSentenceTokenizer(sentence, self.orders):
-            order = len(ngram)
-            if order > self.orders:
-                raise RuntimeError("len(seq) must be less or equal to order")
+            logprob += np.log(self.probInt(ngram, alphas))
+        return logprob
 
-            if order == 1:
-                # For unigrams
-                count = self.counters[order].get(ngram, 0)
-                total_count = sum(self.counters[order].values())
-                prob = (count + alpha) / (total_count + alpha * self.vocab_size)
-            else:
-                # For higher-order n-grams
-                count = self.counters[order].get(ngram, 0)
-                prefix = ngram[:-1]
-                prefix_count = self.counters[order - 1].get(prefix, 0)
-                prob = (count + alpha) / (prefix_count + alpha * self.vocab_size)
-
+    def logProb(self, sentence, alpha=0):
+        logprob, prob = 0, 0
+        for ngram in self.tokenizer.charSentenceTokenizer(sentence, self.orders):
+            prob = self.prob(ngram, alpha)
             if prob > 0:
                 logprob += np.log(prob)
             else:
-                logprob += -np.inf
+                return -np.inf
         return logprob
 
-    def perplexity(self, sentence, alpha=1, doc=False):
+    def __perplexity(self, sentence, params: Dict, mode='default'):
+        """
+            Compute the perplexity of a Sentence
+        """
         T = len(sentence.strip()) + 2  # +2 for start and end tokens
-        logprob = self.LogProb(sentence, alpha)
+        logprob = 0
+        if mode == "default":
+            logprob = self.logProb(sentence, params['alpha'])
+        elif mode == "inter":
+            logprob = self.logProbInt(sentence, params['alphas'])
+        return logprob, T
+
+    def perplexity(self, sentence, params: Dict, mode='default', doc=False):
+        logprob, T = self.__perplexity(sentence, params, mode)
         if doc:
             return logprob, T
-        return np.exp(-logprob / T)
+        else:
+            return np.exp(-logprob / T)
 
-    def __nextChar(self, context, alpha=1):
+    def __nextChar(self, context, params: Dict, mode='default'):
         probs = np.zeros(self.vocab_size)
         for i in range(len(self.vocab)):
-            ngram = context + [self.vocab[i]]
-            probs[i] = self.Prob(tuple(ngram), alpha=1)
+            ngram = context + (self.vocab[i],)
+            if mode == "default":
+                probs[i] = self.prob(ngram, params['alpha'])
+            elif mode == "inter":
+                probs[i] = self.probInt(ngram, params['alphas'])
         probs /= np.sum(probs)
         chr_idx = np.random.multinomial(1, probs).argmax()
         return self.vocab[chr_idx]
 
-    def generateSentence(self, start=None, order=None, alpha=1):
+    def generateSentence(self, params:Dict, start=None, order=None, mode='default'):
         if order is None:
             order = self.orders
         sentence = [self.tokenizer.start]
@@ -95,5 +126,5 @@ class NGModel:
             sentence += list(start)
         while sentence[-1] != self.tokenizer.end:
             context = sentence[-(order - 1):]
-            sentence.append(self.__nextChar(context))
+            sentence.append(self.__nextChar(tuple(context), params, mode))
         return "".join(sentence)

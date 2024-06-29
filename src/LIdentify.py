@@ -1,15 +1,20 @@
-from .utils import sort_dict
-
+import numpy as np
 class LIdentify:
     """
         Language Identifiers
     """
-    def __init__(self, args):
-        self.models = [*args]
 
-    def counts_scorring(self, unknown, order=3):
-        score = {model.name: 0 for model in self.models}
-        for gram in unknown:
-            for model in self.models:
-                score[model.name] += model.ngrams[order].get(gram, 0)
-        return sort_dict(score)
+    def __init__(self, models, alphas, mode, param):
+        self.models = models
+        self.alphas = alphas
+        self.mode = mode
+        self.param = param
+        self.idxs = {model.name: i for i, model in enumerate(models)}
+
+    def predict(self, unknown, order=3):
+        score = np.zeros(len(self.models))
+        for i, model in enumerate(self.models):
+            score[i] = model.perplexity(unknown, params=self.param[model.name], mode=self.mode, doc=False)
+        return np.argmin(score)
+
+
