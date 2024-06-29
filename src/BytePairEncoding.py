@@ -73,11 +73,3 @@ class BytePairEncoding:
 
     def decode(self):
         raise NotImplementedError
-
-
-if __name__ == '__main__':
-    corpus = "low low low low low\nlower lower\nnewer newer newer newer newer newer\nwider wider wider\nnew new new"
-    corpus = re.split(r'\n', corpus)
-    en_bpe = BytePairEncoding('en')
-    en_bpe.init(corpus)
-    en_bpe.learn(max_iter=100)
