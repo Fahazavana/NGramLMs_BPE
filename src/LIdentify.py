@@ -16,5 +16,3 @@ class LIdentify:
         for i, model in enumerate(self.models):
             score[i] = model.perplexity(unknown, params=self.param[model.name], mode=self.mode, doc=False)
         return np.argmin(score)
-
-
