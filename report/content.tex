@@ -86,7 +86,7 @@ With the hyperparameter-tuned models, we can now generate text character by char
 \item With a starting text: Split the text into a list of characters and add the starting marker '<' at the beginning.
 \item From nothing: We start with the starting sentence, then we use the bigram model to form the first two characters, i.e., $(<, \bullet)$.
 
-Now repeat the following process until we meet the ending markers $>$:
+Repeat the until we meet the ending markers $>$:
 \begin{itemize}
 \item Compute all $p(x|w_{t-2}w_{t-1})$, for all $x\in\mathcal{V}$
 \item Normalize these probabilities to ensure they form a valid probability distribution.
