@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -46,7 +46,7 @@ def cmf_acc_matrix(identifiers: LIdentify, x: List[str], y: List[str]) -> np.nda
 
 
 def plot_acc_cmf(cmf: np.ndarray, acc: float, labels: List[str], title: str = '',
-             figsize: Tuple[int, int] = (6, 5), fmt='.0f') -> None:
+             figsize: Tuple[int, int] = (6, 5), fmt='.0f', save:Optional[str]=None) -> None:
     """"
         Plots the confusion matrix  of the accurracy for the test data, using Language identinfier
     """
@@ -57,3 +57,6 @@ def plot_acc_cmf(cmf: np.ndarray, acc: float, labels: List[str], title: str = ''
     plt.title(fr"Confusion matrix - {title} - acc = {acc:.2f}%")
     plt.xlabel("Predicted")
     plt.ylabel("True")
+    if save is not None:
+        plt.savefig(save, bbox_inches='tight')
+    plt.show()

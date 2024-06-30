@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from typing import List, Tuple, TextIO, Union
+from typing import List, Tuple, TextIO, Union, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -123,7 +123,7 @@ class BytePairEncoding:
 
 
 def plot_intersection_cmf(cmf: np.ndarray, labels: List[str], title: str = '', figsize: Tuple[int, int] = (6, 5),
-                          fmt='.0f') -> None:
+                          fmt='.0f', save:Optional[str]=None) -> None:
     """"
         Plot intersection confusion matrix.
     """
@@ -132,3 +132,6 @@ def plot_intersection_cmf(cmf: np.ndarray, labels: List[str], title: str = '', f
     plt.xticks(np.arange(len(labels)) + 0.5, labels)
     plt.yticks(np.arange(len(labels)) + 0.5, labels)
     plt.title(fr"{title}")
+    if save is not None:
+        plt.savefig(save, bbox_inches='tight')
+    plt.show()

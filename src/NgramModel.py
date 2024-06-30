@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -277,7 +277,7 @@ def evalModels(models: Tuple[NGModel], val_file: str, params: Dict, mode: str = 
     return docpp
 
 
-def make_cmf(models: Tuple[NGModel], val_files: Tuple[str], params: Dict, mode='add_k', title: str = '') -> None:
+def make_cmf(models: Tuple[NGModel], val_files: Tuple[str], params: Dict, mode='add_k', title: str = '', save:Optional[str]=None) -> None:
     """
     Make a confusion matrix of all models with the given parameters/mode on a several validation set
     Args:
@@ -301,4 +301,6 @@ def make_cmf(models: Tuple[NGModel], val_files: Tuple[str], params: Dict, mode='
     plt.xticks(np.arange(len(labels)) + 0.5, labels)
     plt.yticks(np.arange(len(labels)) + 0.5, labels)
     plt.title(title)
+    if save is not None:
+        plt.savefig(save, bbox_inches='tight')
     plt.show()

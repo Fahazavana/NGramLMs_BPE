@@ -20,7 +20,7 @@
 %% Legal Notice:
 %% This code is offered as-is without any warranty either expressed or
 %% implied; without even the implied warranty of MERCHANTABILITY or
-%% FITNESS FOR A PARTICULAR PURPOSE! 
+%% FITNESS FOR A PARTICULAR PURPOSE!
 %% User assumes all risk.
 %% In no event shall the IEEE or any contributor to this code be liable for
 %% any damages or losses, including, but not limited to, incidental,
@@ -59,8 +59,13 @@
 % \documentclass[conference]{../sty/IEEEtran}
 
 \usepackage{hyperref}
-
-
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tabularx}
 
 % Some very useful LaTeX packages include:
 % (uncomment the ones you want to load)
@@ -115,12 +120,12 @@
 % *** GRAPHICS RELATED PACKAGES ***
 %
 \ifCLASSINFOpdf
-  % \usepackage[pdftex]{graphicx}
+%  \usepackage[pdftex]{graphicx}
   % declare the path(s) where your graphic files are
-  % \graphicspath{{../pdf/}{../jpeg/}}
+%  \graphicspath{{./figures/}}
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+%  \DeclareGraphicsExtensions{.pdf}
 \else
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
@@ -135,7 +140,7 @@
 % graphicx was written by David Carlisle and Sebastian Rahtz. It is
 % required if you want graphics, photos, etc. graphicx.sty is already
 % installed on most LaTeX systems. The latest version and documentation
-% can be obtained at: 
+% can be obtained at:
 % http://www.ctan.org/pkg/graphicx
 % Another good source of documentation is "Using Imported Graphics in
 % LaTeX2e" by Keith Reckdahl which can be found at:
@@ -328,8 +333,9 @@
 \author{\IEEEauthorblockN{Jean Lucien Randrianantenaina}
 \IEEEauthorblockA{Applied Mathematics, Machine Learning and Artificial Intelligence\\
 Stellenbosch University\\
-161 Decanting Building, Hammanshand Road.\\
-Email: lucien.randrianantenaina@aims-cameroon.org}
+%161 Decanting Building, Hammanshand Road.\\
+%Email: lucien.randrianantenaina@aims-cameroon.org
+}
 }
 
 % conference papers do not typically use \thanks and this command
@@ -339,10 +345,10 @@ Email: lucien.randrianantenaina@aims-cameroon.org}
 
 % for over three affiliations, or if they all won't fit within the width
 % of the page, use this alternative format:
-% 
+%
 %\author{\IEEEauthorblockN{Michael Shell\IEEEauthorrefmark{1},
 %Homer Simpson\IEEEauthorrefmark{2},
-%James Kirk\IEEEauthorrefmark{3}, 
+%James Kirk\IEEEauthorrefmark{3},
 %Montgomery Scott\IEEEauthorrefmark{3} and
 %Eldon Tyrell\IEEEauthorrefmark{4}}
 %\IEEEauthorblockA{\IEEEauthorrefmark{1}School of Electrical and Computer Engineering\\
@@ -403,7 +409,7 @@ Email: lucien.randrianantenaina@aims-cameroon.org}
 %\begin{figure}[!t]
 %\centering
 %\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
+% where an .eps filename suffix will be assumed under latex,
 % and a .pdf suffix will be assumed for pdflatex; or what has been declared
 % via \DeclareGraphicsExtensions.
 %\caption{Simulation results for the network.}
@@ -419,7 +425,7 @@ Email: lucien.randrianantenaina@aims-cameroon.org}
 % The subfigure \label commands are set within each subfloat command,
 % and the \label for the overall figure must come after \caption.
 % \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a 
+% Watch out that the combined width of all the subfigures on a
 % line do not exceed the text width or a line break will occur.
 %
 %\begin{figure*}[!t]
@@ -476,7 +482,7 @@ Email: lucien.randrianantenaina@aims-cameroon.org}
 % in-text middle ("here") positioning is typically not used, but it
 % is allowed and encouraged for Computer Society conferences (but
 % not Computer Society journals). Most IEEE journals/conferences use
-% top floats exclusively. 
+% top floats exclusively.
 % Note that, LaTeX2e, unlike IEEE journals/conferences, places
 % footnotes above bottom floats. This can be corrected via the
 % \fnbelowfloat command of the stfloats package.

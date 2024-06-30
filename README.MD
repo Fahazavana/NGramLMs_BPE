@@ -2,7 +2,7 @@
 
 ## Description
 This project focuses on developing a language identification and similarity analysis system.
-To identify the language used in a given sentence, we build a character tri-gram language model and use perplexity to determine the most likely language.
+To identify the language used in a given sentence, we build a character level tri-gram language model and use perplexity to determine the most likely language.
 Furthermore, this can also be used to see how similir two language are.
 This later is also analysed by performing a Byte-Pair Encoding on each language and compute the intersection between the learned vocabularies.
 
