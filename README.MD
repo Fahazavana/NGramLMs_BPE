@@ -1,10 +1,10 @@
-# Trigram Language Models and BPE: Language Identification and  Similarity
+# Tri-Gram Language Model and Byte-Pair Encodding: Language Identification and Similarity
 
 ## Description
 This project focuses on developing a language identification and similarity analysis system.
-To identify the language used in a given sentence, we build a character level tri-gram language model and use perplexity to determine the most likely language.
-Furthermore, this can also be used to see how similir two language are.
-This later is also analysed by performing a Byte-Pair Encoding on each language and compute the intersection between the learned vocabularies.
+To identify the language used in a given sentence, we build a character-level trigram language model and use perplexity to determine the most likely language.
+Furthermore, this can also be used to see how similar two languages are.
+This latter is also analysed by performing a Byte-Pair Encoding on each language and compute the intersection between the learned vocabularies.
 
 
 ## Folder Structure
