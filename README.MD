@@ -2,10 +2,8 @@
 
 ## Description
 This project focuses on developing a language identification and similarity analysis system.
-The system can identify the language of a given text by using the perplexity.
-
-We also measure the similarity of several languages by performing a Byte-Pair Encoding on each language and then measuring the similarity between languages based on their vocabulary overlap.
-
+To identify the language used in a given sentence, we build a character tri-gram language model and use perplexity to determine the most likely language. 
+To measure the similarity between several languages, we perform Byte-Pair Encoding on each language and compute the intersection between the learned vocabularies.
 
 ## Folder Structure
 - `data/`: Contains the training, validation, and testing data for the language models.
@@ -30,3 +28,9 @@ We also measure the similarity of several languages by performing a Byte-Pair En
 - Seaborn
 - matplotlib
 - Jupyter Notebook
+
+## References
+* **Herman Kamper**, NLP817, https://www.kamperh.com/nlp817/, Stellenbosch University
+* **Daniel Jurafsky**, Speech and Language Processing, 3rd Edition, Stanford University
+* **Compare Language** http://www.elinguistics.net/Compare_Languages.aspx
+
