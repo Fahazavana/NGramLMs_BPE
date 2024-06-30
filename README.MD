@@ -24,7 +24,8 @@ This later is also analysed by performing a Byte-Pair Encoding on each language 
 2. Run the `main.ipynb` Jupyter notebook to execute the language detection and similarity analysis.
 3. The project report can be compiled from the LaTeX source code in the `report/` directory.
 
-**Note**
+**Note**: The NGram model can be used for a higher order N-Gram model as well.
+
 ## Dependencies
 - Python 3.x
 - NumPy
