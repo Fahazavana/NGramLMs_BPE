@@ -1,13 +1,23 @@
 from collections import defaultdict
 from typing import List, Tuple, Dict, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 from src.utils import sort_dict
 from .Tokenizer import Tokenizer
 
 
 class NGModel:
+    """
+        N-Gram Model class:
+        - Count all N-gram
+        - Probability and LogProbability computing
+        - Perplexity computing
+        - Smooting Methods: unsmoothed, Laplace, Add-alpha
+    """
+
     def __init__(self, name: str, orders: int, tokenizer: Tokenizer) -> None:
         self.name = name
         self.orders = orders
@@ -20,7 +30,7 @@ class NGModel:
         """
         Train the model by generating all count the required (1 to N)-Ngram
         from the corpus document provided from a file. 
-        These count will be stored in dictionnary where the key are the n-gram lenght
+        These count will be stored in dictionnary where the key are the N-gram lenght
         Args:
             file_name : path to the corpus file 
         """
@@ -39,12 +49,12 @@ class NGModel:
 
     def get_count(self, ngram: Tuple) -> Tuple[int, int]:
         """
-        Get the n-gram and (n-1)-gram count from the counter,
+        Get the N-gram and (n-1)-gram count from the counter,
         these count will be used to compute the probabilty p(w_t|w_{t-n+1:t-1})
         Args:
-            ngram: The n-gram in which we ar interested
+            ngram: The N-gram in which we ar interested
         Returns:
-            (int, int): the n-gram and (n-1)-gram count
+            (int, int): the N-gram and (n-1)-gram count
         """
 
         order = len(ngram)
@@ -67,7 +77,7 @@ class NGModel:
             - alpha = 1: Laplace
             - 1<alpha <0: add-alpha
         Args:
-            ngram: The n-gram
+            ngram: The N-gram
             alpha: The smoothing parameter by default 1
         Returns:
             (float): The N-gram probability
@@ -81,9 +91,9 @@ class NGModel:
             Compute the probability of an n_gram
             usign interpolation
         Args:
-            ngram: The n-gram
-            alphas: List of the interpoltion weight, the first one correspond to the highest n-gram order
-            and the second one correspond to the next higher n-gram order, to the uni-gram order
+            ngram: The N-gram
+            alphas: List of the interpoltion weight, the first one correspond to the highest N-gram order
+            and the second one correspond to the next higher N-gram order, to the uni-gram order
         Returns:
             (float): The N-gram probability
         """
@@ -101,7 +111,7 @@ class NGModel:
             using interpolation.
         Args:
             sentence: The input sentence
-            alphas: List of the interpolation weight, the first one correspond to the highest n-gram order
+            alphas: List of the interpolation weight, the first one correspond to the highest N-gram order
         Returns:
             (float): The log probability of the input sentence
         """
@@ -217,3 +227,78 @@ class NGModel:
             context = sentence[-(self.orders - 1):]
             sentence.append(self.__nextChar(tuple(context), params, mode))
         return "".join(sentence)
+
+
+def tune_alpha(model: NGModel, val_file: str, alphas: np.ndarray) -> List[float]:
+    """
+    Tune the smoothing parameters of the model with Add-alpha smoothing.
+    Args:
+        model: Model to be tuned
+        val_file: validation file path
+        alphas: list of alphas
+
+    Returns:
+        (list): list of perplexities for each alpha considered
+    """
+    perplexities = []
+    for alpha in alphas:
+        sums, counts = 0, 0
+        with open(val_file) as corpus:
+            for line in corpus:
+                p, c = model.perplexity(line, params={'alpha': alpha}, doc=True, mode='default')
+                sums += p
+                counts += c
+        perplexities.append(np.exp(-sums / counts))
+    return perplexities
+
+
+def evalModels(models: Tuple[NGModel], val_file: str, params: Dict, mode: str = 'default') -> np.ndarray:
+    """
+    Evaluate the models with the given parameters/mode on with a validation set
+    Args:
+        models: list of models to be evaluated
+        val_file: validation file path
+        params: parameters for the model to compute the probabilty
+        mode: smooting mode, by default 'default'
+
+    Returns:
+        (numpy.ndarray): list of perplexities on each model
+    """
+    sums = np.zeros(len(models))
+    counts = np.zeros(len(models))
+    with open(val_file) as corpus:
+        for line in corpus:
+            for i, model in enumerate(models):
+                p, t = model.perplexity(line, params=params[model.name], doc=True, mode=mode)
+                sums[i] += p
+                counts[i] += t
+    _h = -sums / counts
+    docpp = np.exp(_h)
+    return docpp
+
+
+def make_cmf(models: Tuple[NGModel], val_files: Tuple[str], params: Dict, mode='default', title: str = '') -> None:
+    """
+    Make a confusion matrix of all models with the given parameters/mode on a several validation set
+    Args:
+        models: List of models to be evaluated
+        val_files: List of validation file paths to evaluate each model
+        params: parameters for the model to compute the probabilty
+        mode: smooting mode, by default 'default'
+        title: Title of the confusion matrix plot
+
+    Returns:
+        None
+    """
+    n = len(models)
+    labels = list(model.name for model in models)
+    cmf = np.array([])
+    for val_file in val_files:
+        cmf = np.append(cmf, evalModels(models, val_file, params, mode))
+    cmf = cmf.reshape(n, -1)
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cmf, annot=True)
+    plt.xticks(np.arange(len(labels)) + 0.5, labels)
+    plt.yticks(np.arange(len(labels)) + 0.5, labels)
+    plt.title(title)
+    plt.show()

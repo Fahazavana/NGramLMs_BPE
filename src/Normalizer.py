@@ -1,5 +1,4 @@
 import re
-import string
 import unicodedata
 
 
@@ -23,29 +22,27 @@ def paragraph_normalizer(text: str) -> str:
         str: The normalized text.
     """
 
-    # Normalize diacritics to simple characters
+    text = text.strip()
+
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
 
-    acrs_and_abvs = re.findall(r"\b([A-Z]{2,}|[A-Z]+[0-9]+|[A-Z]+[a-z]+[A-Z]|[a-z]+[0-9]+)", text)
-    for acr_and_abv in acrs_and_abvs:
-        if any(char in string.punctuation for char in acr_and_abv) and len(acr_and_abv) > 1:
-            text = text.replace(acr_and_abv, " ".join(acr_and_abv))
+    text = re.sub(r'\d', '0', text)
+
+    text = re.sub(r'\b(?:[A-Z][\.-])+\b', lambda match: match.group().replace('.', ' ').replace('-', ' '), text)
+    text = re.sub(r'\b(\w+)(0+)\b', r'\1 \2', text)
+    text = re.sub(r'\b(0+)(\w+)\b', r'\1 \2', text)
 
     text = re.sub(r"([.!?]\s)(?=[A-Z])", "\n", text)
 
-    text = re.sub(r"\d", "0", text)
-    text = re.sub(r"[^\w\s\n]", " ", text)
+    text = re.sub(r'[^a-zA-Z0-9\s\n]', ' ', text)
 
-    text = re.sub(r"\s{2,}", " ", text)
-    text = re.sub(r"_", " ", text)
-
-    # Convert all text to lowercase
+    text = re.sub(r'\s{2,}', ' ', text)
     text = text.lower()
 
     return text
 
 
-def normalize_data(in_file: str, out_file: str)->None:
+def normalize_data(in_file: str, out_file: str) -> None:
     """
     Normalize the contents of a file and write the results to another file.
 
@@ -61,10 +58,3 @@ def normalize_data(in_file: str, out_file: str)->None:
             print("Document Normalized Successfully!")
     except FileNotFoundError:
         print(f"File not found at {in_file}")
-
-
-# Example usage
-if __name__ == "__main__":
-    input_file = "input.txt"
-    output_file = "output.txt"
-    normalize_file(input_file, output_file)

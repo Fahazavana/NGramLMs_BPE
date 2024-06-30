@@ -1,12 +1,14 @@
-# Language identification and Similarity
+# Trigram Language Models and BPE: Language Identification and  Similarity
 
 ## Description
 This project focuses on developing a language identification and similarity analysis system.
-To identify the language used in a given sentence, we build a character tri-gram language model and use perplexity to determine the most likely language. 
-To measure the similarity between several languages, we perform Byte-Pair Encoding on each language and compute the intersection between the learned vocabularies.
+To identify the language used in a given sentence, we build a character tri-gram language model and use perplexity to determine the most likely language.
+Furthermore, this can also be used to see how similir two language are.
+This later is also analysed by performing a Byte-Pair Encoding on each language and compute the intersection between the learned vocabularies.
+
 
 ## Folder Structure
-- `data/`: Contains the training, validation, and testing data for the language models.
+- `data/`: Contains the training, validation and testing data for the language models.
 - `src/`:
   - `Normalizer.py`: Implements text normalization techniques.
   - `Tokenizer.py`: Handles tokenization and N-gram generation.
@@ -22,6 +24,7 @@ To measure the similarity between several languages, we perform Byte-Pair Encodi
 2. Run the `main.ipynb` Jupyter notebook to execute the language detection and similarity analysis.
 3. The project report can be compiled from the LaTeX source code in the `report/` directory.
 
+**Note**
 ## Dependencies
 - Python 3.x
 - NumPy
