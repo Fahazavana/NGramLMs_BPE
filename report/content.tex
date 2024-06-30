@@ -1,13 +1,136 @@
 \begin{abstract}
-    \input{abstract}
+There are many languages on the earth. It is not always easy to recognize them especially when they are similar as some language is a derivation of other languages. Given, a text document with an unknown language, how would we know in which language was it written? Language Model can be used for this purpose of identification. 
 \end{abstract}
 \section{Introduction}
 
-\section{Methodology}
-\subsection{Text normalization}
-\subsection{Language modelling}
-\subsection{Languague identification}
-\subsection{Byte-pair encoding for language similarity}
-\subsection{Perplexity}
-\section{Results and discussion}
+
+\section{Data Preprocessing: text normalization}
+To build the language identification we are given five non-normalized corpus with the following language:
+\begin{itemize}
+    \item Afrikaans (af)
+    \item English (en)
+    \item Deutch (nl)
+    \item Xhosa (xh)
+    \item Zulu (zl)
+\end{itemize}
+Each of them with a normalized validation data to check and tune some hyperparameter of our model. Lastly, we have a validation set to measure the final performance of our language identification. 
+
+Thus to normalize the training data to match the form validation set we apply the following operation:
+\begin{enumerate}
+    \item Each paragraph is splited by detecting where we have `.', `!' or  `?' followed by space and Capital letter. Then, each sentence is placed on a single line in the normalized file data,
+    \item Remove leading and trailing spaces,
+    \item Replace all:
+    \begin{itemize}
+        \item diacritics into its normal form,
+        \item digits by 0,
+    \end{itemize}
+    \item Expand all abbreviation and acronyms by inserting a space,
+    \item The text is then transformed into a lower case.
+\end{enumerate}
+To perform these operations we use the \texttt{re} package of python for regular expression and \texttt{unicodedata} for diacritics.
+
+Once the data is ready, we can use them to build our language model.
+\section{Language Modelling}
+This section describes the how we build the character trigram language model, how we evaluate and generate text from it. The model will use the following vocabulary:
+\begin{equation}
+    \mathcal{V} = \{ \mathtt{<, >, spaces, 0, a, b, \ldots, z} \}
+\end{equation}
+which are obtained from the normalized corpus, where $<$ indicate the beginning of  a sentence and $>$ its end.
+\subsection{Trigram model}
+With a Markov assumption, given a sequence of two characters $(w_{t-2}, w_{t-1})$, a trigram model predicts the probability of a third word $w_t$ given the previous two by:
+\begin{equation}
+    P(w_t|w_{t-2:t-1}) = \frac{P(w_{t-2:t})}{P(w_{t-2:t-1})}
+\end{equation}
+and the likelihood of a given sentence  is defined by:
+\begin{equation}
+    P(w_{1:T})=\prod_{i=1}^{T}P(w_i|w_{i-2}w_{i-1})
+\end{equation}
+However, we do not have access to this true probability, as we cannot have all the possible trigrams in our training set. Therefore we have to estimate it, using maximum likelihood estimation.
+\subsection{Probability estimation}
+Since $P(w_t|w_{t-2:t-1})$, is not accessible we substitute it by its maximum likelihood estimation defined by:
+\begin{equation}
+    P_{\mathrm{MLE}}(w_t|w_{t-2:t-1}) = \frac{C(w_{t-2:t})}{C(w_{t-2:t-1})}
+\end{equation}
+Where $C(w_{t-2:t})$ is the count of the trigram $(w_{t-2:t})$ in the training data, and $C(w_{t-2:t-1})$ is the count of the bigram $(w_{t-2:t-1})$. Once again, some trigram will not be present, leading to a zero count, and then a zero probability for a particular sentence which does not make sense. 
+
+To handle the zero count trigram, we can use various smoothing technics, here we use the add-k smoothing which consist of adding a fractional count when computing the probability as follows:
+    \begin{equation}
+        P_{\mathrm{Add-k}}(w_t|w_{t-2:t-1}) = \frac{C(w_{t-2:t})+k}{C(w_{t-2:t-1})+k|\mathcal{V}|}
+    \end{equation}
+When $k=1$ it is called Laplace smoothing, which is the default value in our implementation. The value of $k$ is then tuned on the validation set using a grid search, and consider the one that maximize the likelihood. 
+
+Using Laplace-smoothing is fine for our language identification purpose, but it can move to punch mass to the unseen trigram, and this is one of the reasons that we tune it.
+
+Another alternative is to use a mixture of several models, by using the probability defined by:
+\begin{equation}
+    P_{\mathrm{INT}}(w_t|w_{t-2:t-1}) =\lambda_iP(w_i|w_{t-2:t-1}) + \lambda_2P(w_t|w_{t-1}) + \lambda_3P(w_t) 
+\end{equation}
+This technic is called Interpolation smoothing, the value of $\lambda_i$ can be tuned as well, and it must sum to one.
+
+Both of these technics are suitable for our problem, as we aim to predict in wich language is used in a given sentence.
+
+\subsection{Model evaluation and hyperparameter tunning}
+Now, with the basis of the model, we need a metric to measure how good it is. The most common metric in NLP is the perplexity, defined by the probability of the data assigned by the language model, normalized by the nmber of words:
+\begin{equation}
+    PP(W) = P(w_{1:T})^{-\frac{1}{T}} = \sqrt[T]{\frac{1}{P(w_{1:T})}}
+\end{equation}
+where a lower perplexity reflects a better model.
+In practice we use the log probability, since the perplexity can be computed \begin{equation}
+    PP(W) = P(w_{1:T})^{1/T} = 2^{-\frac{1}{N}\log_2 P(w_{1:T})}
+with:\end{equation}
+In our implementation we use the natural log, so the two is replaced by $e$.
+Additionally, minimizing the perplexity is equivalent to maximizing the probability, and we use this fact to optimize our hyperparameter.
+\subsection{Text Generation}
+With the hyperparameter-tuned models, we can now generate text character by character. The code was designed to generate text from nothing or from a specific starting text. The text generation process is as follows:
+\begin{itemize}
+\item With a starting text: Split the text into a list of characters and add the starting marker '<' at the beginning.
+\item From nothing: We start with the starting sentence, then we use the bigram model to form the first two characters, i.e., $(<, \bullet)$.
+
+Now repeat the following process until we meet the ending markers $>$:
+\begin{itemize}
+\item Compute all $p(x|w_{t-2}w_{t-1})$, for all $x\in\mathcal{V}$
+\item Normalize these probabilities to ensure they form a valid probability distribution.
+\item Use \texttt{np.random.multinomial} to sample the next character according to the normalized probabilities.
+\end{itemize}
+\end{itemize}
+Note that the process described above is also used for the bigram model at the beginning if we do not specify any starting character.
+The probability is computed according to the specific smoothing method.
+
+
+Another utility of this metric is to look how similar a language A on language B. We can perform that by consider a corpus from A and compute the perplexity on the language model B, and vice versa. If the two languages are similar, it should yield lower perplexity on both sides, otherwise it l be high.
+\section{Language identification}
+this section described how we use our set of trigram models to identify the language for a given sentence by doing the following steps:
+\begin{itemize}
+    \item Compute the perplexity of the sentence using each of the trained language models.
+    \item The predicted label (language) is then determined by the model with the lowest perplexity.
+\end{itemize}
+Then we apply that on the whole test set in order to determine the accuracy of our language identification. The accuracy is computed by counting the number of correct language.
+\section{Byte-Pair Encoding and Language Similarity}
+We have already mentioned that the perplexity can be used to analyse the similarity of two languages. Here, we compare the vocabulary generated by the Byte-Pair Encoding (BPE) algorithm to see how similar they are.
+
+The BPE is an algorithm that allows automatic subword token learning from a given training corpus by following the process bellow:
+\begin{enumerate}
+    \item Initialization:
+    \begin{itemize}
+    \item Initialize the tokens at the character level.
+    \item Create the initial vocabulary $\mathcal{V}$ using the unique characters from the tokens.
+    \end{itemize}
+    
+    \item Repeat for $k$ times:
+    \begin{itemize}
+        \item Find the most frequent pair of adjacent tokens $t_L, t_R$ in the corpus.
+        \item Create a new token $t_{new} = t_L + t_R$ (merge the pair).
+        \item Add the new token $t_{new}$ to the vocabulary $\mathcal{V}$.
+        \item Replace all occurrences of $t_L, t_R$ with $t_{new}$ in the corpus.
+        \item Record the merge into the history.
+    \end{itemize}
+\end{enumerate}
+
+The resulting vocabulary $\mathcal{V}$ will have $k + |$Initial Characters$|$ tokens after the $k$ iterations.
+
+If the algorithm is run for a very large number of merges, the vocabulary may contain complete words from the training corpus, which may not be the most useful representation.
+
+Therefore, the appropriate number of merges should be chosen to obtain a compact set of sub-word units that can effectively represent the original text corpus. This allows the model to handle rare and out-of-vocabulary words by decomposing them into these learned sub-word units.
+\section{Result and Discussion}
+
 \section{Conclusion}
